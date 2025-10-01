@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insaf Tech & Varieties - Bookmark Manager</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Load Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5; /* Indigo-600 */
+            --primary-dark: #4338ca; /* Indigo-700 */
+            --surface: #1f2937; /* Gray-800 */
+            --background: #111827; /* Gray-900 */
+            --text-color: #f3f4f6; /* Gray-100 */
+            font-family: 'Inter', sans-serif;
+        }
+        body {
+            background-color: var(--background);
+            color: var(--text-color);
+        }
+        .card {
+            background-color: var(--surface);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-color: var(--primary);
+            transition: background-color 0.15s;
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        .input-field {
+            background-color: #374151; /* Gray-700 */
+            border: 1px solid #4b5563; /* Gray-600 */
+            color: var(--text-color);
+        }
+        .icon-link {
+            transition: transform 0.1s;
+        }
+        .icon-link:hover {
+            transform: scale(1.1);
+            color: #a5b4fc; /* Indigo-300 */
+        }
+        /* Style for the category badge */
+        .category-badge {
+            background-color: #374151;
+            color: #a5b4fc;
+            padding: 0.2rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        /* Custom scrollbar for better dark mode aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: var(--primary);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+        /* Tab Styles */
+        .tab-button {
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            color: #9ca3af; /* Gray-400 */
+            transition: all 0.2s ease;
+        }
+        .tab-button.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        .tab-button:hover:not(.active) {
+            color: #d1d5db; /* Gray-300 ;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-indigo-900/50 p-4 shadow-xl sticky top-0 z-10 border-b border-indigo-700">
+        <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center">
+            <h1 class="text-3xl font-extrabold tracking-tight text-white flex items-center">
+                <span data-lucide="gem" class="w-7 h-7 mr-2 text-indigo-400"></span>
+                Insaf Tech & Varieties
+            </h1>
+            <div id="auth-status" class="mt-2 sm:mt-0 text-sm font-medium">
+                <!-- USER ICON AND NAME DISPLAYED HERE -->
+                <span id="user-id-display" class="flex items-center space-x-2 text-indigo-300 font-bold">
+                    <span data-lucide="user-circle" class="w-6 h-6"></span>
+                    <span>Mdripon islam riad</span>
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area with Tabs -->
+    <main class="container mx-auto p-4 lg:p-8 space-y-6">
+
+        <!-- Tab Navigation -->
+        <div class="card rounded-xl p-1 shadow-lg">
+            <div class="flex border-b border-gray-700">
+                <button id="tab-bookmarks" data-view="view-bookmarks" class="tab-button active flex-1 flex justify-center items-center">
+                    <span data-lucide="list-checks" class="w-5 h-5 mr-2"></span>
+                    My Bookmarks
+                </button>
+                <button id="tab-add-link" data-view="view-add-link" class="tab-button flex-1 flex justify-center items-center">
+                    <span data-lucide="plus-square" class="w-5 h-5 mr-2"></span>
+                    Add New Link
+                </button>
+            </div>
+        </div>
+
+        <!-- View 1: My Bookmarks (Default View) -->
+        <div id="view-bookmarks" class="space-y-6">
+            
+            <!-- Filter and Search -->
+            <div class="card p-4 rounded-xl flex flex-col sm:flex-row gap-4">
+                <div class="flex-grow">
+                    <label for="search-input" class="sr-only">Search Bookmarks</label>
+                    <div class="relative">
+                        <span data-lucide="search" class="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></span>
+                        <input type="text" id="search-input" placeholder="Search by Name or URL..." class="input-field w-full p-2 pl-10 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                </div>
+                <div class="sm:w-1/3">
+                    <label for="category-filter" class="sr-only">Filter by Category</label>
+                    <select id="category-filter" class="input-field w-full p-2 rounded-lg appearance-none focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer">
+                        <option value="">All Categories</option>
+                        <!-- Options populated by JS -->
+                    </select>
+                </div>
+            </div>
+
+            <!-- Bookmark List -->
+            <div class="card p-6 rounded-xl">
+                <h2 class="text-2xl font-semibold mb-4 text-indigo-300 flex items-center">
+                    <span data-lucide="list-checks" class="w-5 h-5 mr-2"></span>
+                    My Service Links
+                </h2>
+                <div id="bookmark-list" class="space-y-3">
+                    <div id="loading-indicator" class="text-center p-8 text-gray-400">
+                        <span data-lucide="loader-circle" class="w-8 h-8 mx-auto animate-spin"></span>
+                        <p class="mt-2">Loading your personal links...</p>
+                    </div>
+                    <!-- Bookmarks will be inserted here -->
+                </div>
+                <p id="no-bookmarks" class="hidden text-center p-8 text-gray-400">You haven't added any links yet. Use the 'Add New Link' tab to get started!</p>
+            </div>
+        </div>
+
+        <!-- View 2: Add New Bookmark Form (Initially Hidden) -->
+        <div id="view-add-link" class="hidden">
+            <div class="card rounded-xl p-6 max-w-lg mx-auto">
+                <h2 class="text-2xl font-semibold mb-4 text-indigo-300 flex items-center">
+                    <span data-lucide="plus-square" class="w-5 h-5 mr-2"></span>
+                    Add New Link
+                </h2>
+                <form id="bookmark-form" class="space-y-4">
+                    <div>
+                        <label for="service-name" class="block text-sm font-medium mb-1">Service Name</label>
+                        <input type="text" id="service-name" required placeholder="e.g., GitHub, Google Docs" class="input-field w-full p-2 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label for="service-url" class="block text-sm font-medium mb-1">URL</label>
+                        <input type="url" id="service-url" required placeholder="https://example.com" class="input-field w-full p-2 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label for="service-category" class="block text-sm font-medium mb-1">Category (Optional)</label>
+                        <input type="text" id="service-category" placeholder="e.g., Dev Tools, Finance, Shopping" class="input-field w-full p-2 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <button type="submit" class="btn-primary w-full py-2 rounded-xl text-white font-semibold flex items-center justify-center">
+                        <span data-lucide="bookmark-plus" class="w-5 h-5 mr-2"></span>
+                        Save Bookmark
+                    </button>
+                    <p id="form-error" class="text-red-400 text-sm mt-2 hidden">An error occurred while saving the bookmark.</p>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal for confirm messages -->
+    <div id="custom-modal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50">
+        <div class="card p-6 rounded-xl w-full max-w-sm m-4">
+            <h3 id="modal-title" class="text-xl font-semibold mb-4 text-red-400">Confirm Deletion</h3>
+            <p id="modal-message" class="mb-6">Are you sure you want to delete this bookmark?</p>
+            <div class="flex justify-end space-x-3">
+                <button id="modal-cancel" class="px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-500 text-white font-medium">Cancel</button>
+                <button id="modal-confirm" class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium">Delete</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Firebase Setup and State Variables ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db, auth, userId = null;
+        let isAuthReady = false;
+        let allBookmarks = [];
+        let uniqueCategories = new Set();
+        let currentFilter = { category: '', search: '' };
+
+        // Set log level for debugging
+        setLogLevel('Debug');
+
+        // --- DOM Elements ---
+        const bookmarkForm = document.getElementById('bookmark-form');
+        const bookmarkList = document.getElementById('bookmark-list');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const noBookmarksMessage = document.getElementById('no-bookmarks');
+        const userIdDisplay = document.getElementById('user-id-display');
+        const formError = document.getElementById('form-error');
+        const searchInput = document.getElementById('search-input');
+        const categoryFilter = document.getElementById('category-filter');
+        const customModal = document.getElementById('custom-modal');
+        const modalConfirmBtn = document.getElementById('modal-confirm');
+        const modalCancelBtn = document.getElementById('modal-cancel');
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const viewBookmarks = document.getElementById('view-bookmarks');
+        const viewAddLink = document.getElementById('view-add-link');
+        let pendingDeletion = null; // Store the ID of the bookmark to be deleted
+
+        // --- View Switching Functions ---
+
+        /** Switches the active view (tab) */
+        const switchView = (targetViewId) => {
+            // Hide all views
+            viewBookmarks.classList.add('hidden');
+            viewAddLink.classList.add('hidden');
+
+            // Deactivate all tabs
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+
+            // Show the target view
+            const targetView = document.getElementById(targetViewId);
+            if (targetView) {
+                targetView.classList.remove('hidden');
+                // Activate the corresponding tab
+                document.querySelector(`.tab-button[data-view="${targetViewId}"]`).classList.add('active');
+            }
+        }
+
+        // Add event listeners for tab switching
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                switchView(button.getAttribute('data-view'));
+            });
+        });
+
+
+        // --- Utility Functions ---
+
+        /**
+         * Safely removes protocol prefix (http/https) from a URL for cleaner display.
+         * @param {string} url The full URL.
+         * @returns {string} The URL without protocol.
+         */
+        const cleanUrl = (url) => {
+            try {
+                const parsedUrl = new URL(url);
+                return parsedUrl.hostname + parsedUrl.pathname;
+            } catch (e) {
+                return url; // Return original if invalid URL
+            }
+        }
+
+        // --- Modal Handlers ---
+
+        /**
+         * Shows the custom modal for confirmation.
+         * @param {string} docId The ID of the document to delete.
+         * @param {string} name The name of the service.
+         */
+        const showConfirmModal = (docId, name) => {
+            document.getElementById('modal-title').textContent = `Confirm Deletion`;
+            document.getElementById('modal-message').innerHTML = `Are you sure you want to delete the link for <strong>${name}</strong>?`;
+            pendingDeletion = docId;
+            customModal.classList.remove('hidden');
+            customModal.classList.add('flex');
+        };
+
+        /** Hides the custom modal. */
+        const hideConfirmModal = () => {
+            customModal.classList.add('hidden');
+            customModal.classList.remove('flex');
+            pendingDeletion = null;
+        };
+
+        /** Handles the deletion confirmed by the user. */
+        const handleConfirmedDeletion = async () => {
+            if (pendingDeletion) {
+                await deleteBookmark(pendingDeletion);
+            }
+            hideConfirmModal();
+        };
+
+        modalCancelBtn.addEventListener('click', hideConfirmModal);
+        modalConfirmBtn.addEventListener('click', handleConfirmedDeletion);
+
+
+        // --- Firestore Functions ---
+
+        /** Initializes Firebase app and services. */
+        const initializeFirebase = async () => {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Authentication
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                    } else {
+                        // Sign in anonymously if no token is available or user is logged out
+                        await signInAnonymously(auth);
+                        userId = auth.currentUser.uid;
+                    }
+
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                        userId = auth.currentUser.uid;
+                    }
+
+                    // The user name is static now, but we still need userId for Firestore access
+                    isAuthReady = true;
+                    // Start listening for bookmarks only after auth is ready
+                    listenForBookmarks();
+                });
+
+            } catch (e) {
+                console.error("Error initializing Firebase:", e);
+                userIdDisplay.textContent = "Error initializing service.";
+            }
+        };
+
+
+        /**
+         * Adds a new bookmark to Firestore.
+         * @param {string} name Service name.
+         * @param {string} url Service URL.
+         * @param {string} category Service category.
+         */
+        const saveBookmark = async (name, url, category) => {
+            if (!isAuthReady || !userId) {
+                console.error("Firestore not ready or userId missing.");
+                formError.textContent = "Service not ready. Please try again in a moment.";
+                formError.classList.remove('hidden');
+                return;
+            }
+
+            const path = `/artifacts/${appId}/users/${userId}/bookmarks`;
+            const newBookmark = {
+                name: name.trim(),
+                url: url.trim(),
+                category: category.trim() || 'Uncategorized',
+                createdAt: Date.now() // For sorting purposes
+            };
+
+            try {
+                await addDoc(collection(db, path), newBookmark);
+                formError.classList.add('hidden');
+                // Switch back to the bookmarks view after saving
+                switchView('view-bookmarks'); 
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                formError.textContent = "Failed to save bookmark. Check console for details.";
+                formError.classList.remove('hidden');
+            }
+        };
+
+        /**
+         * Deletes a bookmark from Firestore.
+         * @param {string} docId The ID of the document to delete.
+         */
+        const deleteBookmark = async (docId) => {
+            if (!isAuthReady || !userId) {
+                console.error("Firestore not ready or userId missing.");
+                return;
+            }
+
+            const path = `/artifacts/${appId}/users/${userId}/bookmarks`;
+            try {
+                await deleteDoc(doc(db, path, docId));
+                console.log("Document successfully deleted!");
+            } catch (e) {
+                console.error("Error removing document: ", e);
+            }
+        };
+
+        /** Listens for real-time updates to the bookmarks collection. */
+        const listenForBookmarks = () => {
+            if (!isAuthReady || !userId) return;
+
+            const path = `/artifacts/${appId}/users/${userId}/bookmarks`;
+            const q = collection(db, path);
+
+            // Hide loading indicator as we start listening
+            loadingIndicator.classList.add('hidden');
+
+            onSnapshot(q, (snapshot) => {
+                allBookmarks = [];
+                uniqueCategories.clear();
+
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const bookmark = { id: doc.id, ...data };
+                    allBookmarks.push(bookmark);
+                    uniqueCategories.add(data.category || 'Uncategorized');
+                });
+
+                // Sort by creation time, descending
+                allBookmarks.sort((a, b) => b.createdAt - a.createdAt);
+
+                // Update UI based on filter
+                updateUI();
+                updateCategoryFilterDropdown();
+            }, (error) => {
+                console.error("Error getting real-time documents: ", error);
+                bookmarkList.innerHTML = `<p class="text-red-400 text-center p-8">Could not load bookmarks: ${error.message}</p>`;
+                loadingIndicator.classList.add('hidden');
+            });
+        };
+
+
+        // --- UI Rendering Functions ---
+
+        /** Renders a single bookmark item. */
+        const renderBookmarkItem = (bookmark) => {
+            const { id, name, url, category } = bookmark;
+            const item = document.createElement('div');
+            item.className = 'flex flex-col sm:flex-row items-start sm:items-center p-4 card rounded-lg hover:shadow-lg transition duration-200 border border-gray-700 hover:border-indigo-500';
+
+            const categoryText = category || 'Uncategorized';
+            const cleanDisplayUrl = cleanUrl(url);
+
+            item.innerHTML = `
+                <div class="flex-grow min-w-0 mb-2 sm:mb-0">
+                    <div class="flex items-center space-x-2">
+                        <span class="category-badge">${categoryText}</span>
+                    </div>
+                    <a href="${url}" target="_blank" rel="noopener noreferrer" class="block text-lg font-semibold text-white truncate hover:text-indigo-400 transition">
+                        ${name}
+                    </a>
+                    <p class="text-sm text-gray-400 truncate mt-0.5">
+                        <span data-lucide="link" class="w-4 h-4 inline-block mr-1 translate-y-[-1px]"></span>
+                        ${cleanDisplayUrl}
+                    </p>
+                </div>
+                <div class="flex space-x-3 ml-0 sm:ml-4 items-center flex-shrink-0">
+                    <a href="${url}" target="_blank" rel="noopener noreferrer" class="icon-link text-indigo-400 p-2 rounded-full hover:bg-indigo-900" title="Visit Link">
+                        <span data-lucide="external-link" class="w-5 h-5"></span>
+                    </a>
+                    <button data-doc-id="${id}" data-name="${name}" class="delete-btn icon-link text-red-400 p-2 rounded-full hover:bg-red-900" title="Delete Bookmark">
+                        <span data-lucide="trash-2" class="w-5 h-5"></span>
+                    </button>
+                </div>
+            `;
+
+            // Re-render lucide icons inside the new item
+            lucide.createIcons();
+
+            const deleteButton = item.querySelector('.delete-btn');
+            deleteButton.addEventListener('click', (e) => {
+                const docId = e.currentTarget.getAttribute('data-doc-id');
+                const name = e.currentTarget.getAttribute('data-name');
+                showConfirmModal(docId, name);
+            });
+
+            return item;
+        };
+
+        /** Filters and renders the bookmarks list. */
+        const updateUI = () => {
+            bookmarkList.innerHTML = '';
+            const filteredBookmarks = allBookmarks.filter(bookmark => {
+                const matchesCategory = currentFilter.category === '' || (bookmark.category || 'Uncategorized') === currentFilter.category;
+                const matchesSearch = currentFilter.search === '' ||
+                    bookmark.name.toLowerCase().includes(currentFilter.search) ||
+                    bookmark.url.toLowerCase().includes(currentFilter.search);
+                return matchesCategory && matchesSearch;
+            });
+
+            if (filteredBookmarks.length === 0) {
+                noBookmarksMessage.textContent = allBookmarks.length > 0 ? "No links match your current filter/search criteria." : "You haven't added any links yet. Use the 'Add New Link' tab to get started!";
+                noBookmarksMessage.classList.remove('hidden');
+            } else {
+                noBookmarksMessage.classList.add('hidden');
+                filteredBookmarks.forEach(bookmark => {
+                    bookmarkList.appendChild(renderBookmarkItem(bookmark));
+                });
+            }
+        };
+
+        /** Updates the categories available in the filter dropdown. */
+        const updateCategoryFilterDropdown = () => {
+            const currentSelection = categoryFilter.value;
+            categoryFilter.innerHTML = '<option value="">All Categories</option>';
+
+            const sortedCategories = Array.from(uniqueCategories).sort();
+
+            sortedCategories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                if (cat === currentSelection) {
+                    option.selected = true;
+                }
+                categoryFilter.appendChild(option);
+            });
+        };
+
+
+        // --- Event Listeners ---
+
+        bookmarkForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('service-name').value;
+            const url = document.getElementById('service-url').value;
+            const category = document.getElementById('service-category').value;
+
+            if (name && url) {
+                await saveBookmark(name, url, category);
+                // Clear form on success
+                bookmarkForm.reset();
+            } else {
+                formError.textContent = "Please provide both Service Name and URL.";
+                formError.classList.remove('hidden');
+            }
+        });
+
+        categoryFilter.addEventListener('change', (e) => {
+            currentFilter.category = e.target.value;
+            updateUI();
+        });
+
+        searchInput.addEventListener('input', (e) => {
+            currentFilter.search = e.target.value.toLowerCase();
+            updateUI();
+        });
+
+        // --- Initialization ---
+
+        window.onload = function() {
+            // Initialize lucide icons for the header/initial load
+            lucide.createIcons();
+            // Start Firebase initialization and authentication process
+            initializeFirebase();
+            // Ensure the default view is set
+            switchView('view-bookmarks'); 
+        };
+
+    </script>
+</body>
+</html>
